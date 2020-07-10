@@ -6,7 +6,7 @@
 #include <cstring>
 #include <cassert>
 
-vector::vector() : size_small_data(1u) {}
+vector::vector() : size_(1u) {}
 
 vector::vector(size_t n,
                uint32_t assign) {
@@ -15,37 +15,36 @@ vector::vector(size_t n,
         set_small();
         std::fill(small_data, small_data + n, assign);
     } else {
-        ptr = new shared_ptr_vector(std::vector<uint32_t>(n));
+        ptr = new shared_ptr_vector(std::vector<uint32_t>(n, assign));
         set_big();
-        std::fill(ptr->get().begin(), ptr->get().end(), assign);
     }
 }
 
 // helpful functions
 
 void vector::set_size(size_t new_size) {
-    size_small_data &= 1u;
-    size_small_data |= (new_size << 1u);
+    size_ &= 1u;
+    size_ |= (new_size << 1u);
 }
 
 size_t vector::get_size() const {
-    return is_small() ? (size_small_data >> 1u) : ptr->get().size();
+    return is_small() ? (size_ >> 1u) : ptr->get().size();
 }
 
 bool vector::is_small() const {
-    return size_small_data & 1u;
+    return size_ & 1u;
 }
 
 void vector::set_small() {
-    size_small_data |= 1u;
+    size_ |= 1u;
 }
 
 void vector::set_big() {
-    size_small_data &= ~1u;
+    size_ &= ~1u;
 }
 
 vector::vector(const vector &rhs) {
-    size_small_data = rhs.size_small_data;
+    size_ = rhs.size_;
     if (rhs.is_small()) {
         std::copy(rhs.small_data, rhs.small_data + rhs.get_size(), small_data);
     } else {
@@ -64,7 +63,7 @@ vector::~vector() {
 }
 
 void vector::swap(vector &rhs) {
-    std::swap(size_small_data, rhs.size_small_data);
+    std::swap(size_, rhs.size_);
     std::swap_ranges(small_data, small_data + MAX_SMALL, rhs.small_data);
 }
 
@@ -103,8 +102,7 @@ uint32_t vector::back() const {
 }
 
 void vector::to_big() {
-    std::vector<uint32_t> data(small_data, small_data + get_size());
-    ptr = new shared_ptr_vector(data);
+    ptr = new shared_ptr_vector(std::vector<uint32_t>(small_data, small_data + get_size()));
     set_big();
 }
 
@@ -145,6 +143,7 @@ void vector::resize(size_t new_size, uint32_t assign) {
         ptr->get().resize(new_size, assign);
     }
 }
+
 bool operator==(vector const &lhs, vector const &rhs) {
     if (lhs.get_size() != rhs.get_size()) {
         return false;

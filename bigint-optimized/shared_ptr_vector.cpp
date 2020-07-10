@@ -4,8 +4,10 @@
 
 #include "shared_ptr_vector.h"
 
-shared_ptr_vector::shared_ptr_vector(std::vector<uint32_t> const &rhs)
-: ref_counter(1), data(rhs) {}
+#include <utility>
+
+shared_ptr_vector::shared_ptr_vector(std::vector<uint32_t> rhs)
+: ref_counter(1), data(std::move(rhs)) {}
 
 std::vector<uint32_t> &shared_ptr_vector::get() {
     return data;
@@ -27,6 +29,7 @@ void shared_ptr_vector::inc_ref_counter() {
 void shared_ptr_vector::dec_ref_counter() {
     --ref_counter;
 }
+
 size_t shared_ptr_vector::get_ref_counter() const {
     return ref_counter;
 }

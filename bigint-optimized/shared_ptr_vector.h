@@ -10,7 +10,7 @@
 #include <cstddef>
 
 struct shared_ptr_vector {
-    explicit shared_ptr_vector(std::vector<uint32_t> const &rhs);
+    explicit shared_ptr_vector(std::vector<uint32_t> rhs);
     std::vector<uint32_t> &get();
     shared_ptr_vector *get_unique();
     void inc_ref_counter();

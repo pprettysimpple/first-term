@@ -34,15 +34,13 @@ struct vector {
     void set_small();
     void set_big();
     void to_big();
-    void reallocate_data(size_t new_capacity);
-    void push_back_realloc(uint32_t const &val);
 
  private:
     union {
         shared_ptr_vector *ptr;
         uint32_t small_data[MAX_SMALL];                             // this part of union is always bigger than other one
     };
-    size_t size_small_data;
+    size_t size_;
 }; // 32 bytes
 
 #endif //BIGINT__VECTOR_H_

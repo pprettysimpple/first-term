@@ -23,6 +23,8 @@ struct vector {
     void resize(size_t new_size, uint32_t assign);
     void swap(vector &rhs);
     friend bool operator==(vector const &, vector const &);
+
+ private:
     static constexpr size_t MAX_SMALL = 8;
 
  private:

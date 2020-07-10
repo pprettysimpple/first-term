@@ -124,10 +124,10 @@ uint32_t vector::back() const {
 }
 
 void vector::to_big() {
-    auto *new_p = static_cast<uint32_t*>(operator new [] (2 * MAX_SMALL * 4));
+    auto *new_p = static_cast<uint32_t*>(operator new [] (MAX_SMALL * 4));
     std::copy(small_data, small_data + get_size(), new_p);
     try {
-        buffer = new buff(2 * MAX_SMALL, 1, new_p);
+        buffer = new buff(MAX_SMALL, 1, new_p);
     } catch (...) {
         operator delete[] (new_p);
     }

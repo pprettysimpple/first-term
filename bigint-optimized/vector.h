@@ -5,7 +5,7 @@
 #ifndef BIGINT__VECTOR_H_
 #define BIGINT__VECTOR_H_
 #include <memory>
-#include <buff.h>
+#include <shared_ptr_vector.h>
 
 struct vector {
     vector();
@@ -34,14 +34,12 @@ struct vector {
     void set_small();
     void set_big();
     void to_big();
-    void make_unique();
-    size_t increase_capacity() const;
-    void new_buffer(size_t new_capacity);
+    void reallocate_data(size_t new_capacity);
     void push_back_realloc(uint32_t const &val);
 
  private:
     union {
-        buff *buffer;
+        shared_ptr_vector *ptr;
         uint32_t small_data[MAX_SMALL];                             // this part of union is always bigger than other one
     };
     size_t size_small_data;

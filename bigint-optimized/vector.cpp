@@ -4,6 +4,7 @@
 
 #include <vector.h>
 #include <cstring>
+#include <cassert>
 
 vector::vector() : size_small_data(1u) {}
 
@@ -139,6 +140,7 @@ size_t vector::increase_capacity() const {
 
 // buffer should be unique
 void vector::new_buffer(size_t new_capacity) {
+    assert(new_capacity >= get_size());
     auto *new_p = static_cast<uint32_t*>(operator new [] (new_capacity * 4));
     std::copy(buffer->p, buffer->p + get_size(), new_p);
     operator delete[] (buffer->p);
@@ -148,7 +150,7 @@ void vector::new_buffer(size_t new_capacity) {
 
 void vector::push_back_realloc(uint32_t const &val) {
     new_buffer(increase_capacity());
-    buffer->p[get_size() - 1] = val;
+    buffer->p[get_size()] = val;
 }
 
 void vector::push_back(uint32_t const &val) {
@@ -166,8 +168,8 @@ void vector::push_back(uint32_t const &val) {
         push_back_realloc(val);
     } else {
         buffer->p[get_size()] = val;
-        set_size(get_size() + 1);
     }
+    set_size(get_size() + 1);
 }
 
 void vector::pop_back() {
@@ -175,6 +177,7 @@ void vector::pop_back() {
 }
 
 void vector::resize(size_t new_size, uint32_t assign) {
+    assert(new_size >= get_size());
     if (is_small() && new_size <= MAX_SMALL) {
         std::fill(small_data + get_size(), small_data + new_size, assign);
     } else {

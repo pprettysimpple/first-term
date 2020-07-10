@@ -15,14 +15,9 @@ vector::vector(size_t n,
         set_small();
         std::fill(small_data, small_data + n, assign);
     } else {
+        ptr = new shared_ptr_vector(std::vector<uint32_t>(n));
         set_big();
-        auto *new_p = static_cast<uint32_t*>(operator new [] (n * 4));
-        try {
-            buffer = new buff(n, 1, new_p);
-        } catch (...) {
-            operator delete[] (new_p);
-        }
-        std::fill(buffer->p, buffer->p + n, assign);
+        std::fill(ptr->get().begin(), ptr->get().end(), assign);
     }
 }
 
@@ -34,7 +29,7 @@ void vector::set_size(size_t new_size) {
 }
 
 size_t vector::get_size() const {
-    return (size_small_data >> 1u);
+    return is_small() ? (size_small_data >> 1u) : ptr->get().size();
 }
 
 bool vector::is_small() const {
@@ -54,17 +49,16 @@ vector::vector(const vector &rhs) {
     if (rhs.is_small()) {
         std::copy(rhs.small_data, rhs.small_data + rhs.get_size(), small_data);
     } else {
-        buffer = rhs.buffer;
-        ++(buffer->ref_counter);
+        ptr = rhs.ptr;
+        ptr->inc_ref_counter();
     }
 }
 
 vector::~vector() {
     if (!is_small()) {
-        --(buffer->ref_counter);
-        if (buffer->ref_counter == 0) {
-            operator delete [] (buffer->p);
-            delete buffer;
+        ptr->dec_ref_counter();
+        if (ptr->get_ref_counter() == 0) {
+            delete ptr;
         }
     }
 }
@@ -87,22 +81,7 @@ uint32_t const &vector::operator[](size_t idx) const {
     if (is_small()) {
         return small_data[idx];
     } else {
-        return buffer->p[idx];
-    }
-}
-
-void vector::make_unique() {
-    if (buffer->ref_counter == 1) {
-        return;
-    }
-    auto *new_p = static_cast<uint32_t *>(operator new[](4 * get_size()));
-    std::copy(buffer->p, buffer->p + get_size(), new_p);
-    --(buffer->ref_counter);
-    try {
-        buffer = new buff(get_size(), 1, new_p);
-    } catch (...) {
-        operator delete[] (new_p);
-        ++(buffer->ref_counter);
+        return ptr->get()[idx];
     }
 }
 
@@ -110,8 +89,8 @@ uint32_t &vector::operator[](size_t idx) {
     if (is_small()) {
         return small_data[idx];
     } else {
-        make_unique();
-        return buffer->p[idx];
+        ptr = ptr->get_unique();
+        return ptr->get()[idx];
     }
 }
 
@@ -124,33 +103,9 @@ uint32_t vector::back() const {
 }
 
 void vector::to_big() {
-    auto *new_p = static_cast<uint32_t*>(operator new [] (MAX_SMALL * 4));
-    std::copy(small_data, small_data + get_size(), new_p);
-    try {
-        buffer = new buff(MAX_SMALL, 1, new_p);
-    } catch (...) {
-        operator delete[] (new_p);
-    }
+    std::vector<uint32_t> data(small_data, small_data + get_size());
+    ptr = new shared_ptr_vector(data);
     set_big();
-}
-
-size_t vector::increase_capacity() const {
-    return 2 * buffer->capacity + 1;
-}
-
-// buffer should be unique
-void vector::new_buffer(size_t new_capacity) {
-    assert(new_capacity >= get_size());
-    auto *new_p = static_cast<uint32_t*>(operator new [] (new_capacity * 4));
-    std::copy(buffer->p, buffer->p + get_size(), new_p);
-    operator delete[] (buffer->p);
-    buffer->p = new_p;
-    buffer->capacity = new_capacity;
-}
-
-void vector::push_back_realloc(uint32_t const &val) {
-    new_buffer(increase_capacity());
-    buffer->p[get_size()] = val;
 }
 
 void vector::push_back(uint32_t const &val) {
@@ -162,36 +117,35 @@ void vector::push_back(uint32_t const &val) {
     if (is_small()) {
         to_big();
     } else {
-        make_unique();
+        ptr = ptr->get_unique();
     }
-    if (get_size() == buffer->capacity) {
-        push_back_realloc(val);
-    } else {
-        buffer->p[get_size()] = val;
-    }
-    set_size(get_size() + 1);
+    ptr->get().push_back(val);
 }
 
 void vector::pop_back() {
-    set_size(get_size() - 1);
+    if (is_small()) {
+        set_size(get_size() - 1);
+    } else {
+        ptr = ptr->get_unique();
+        ptr->get().pop_back();
+    }
 }
 
 void vector::resize(size_t new_size, uint32_t assign) {
     assert(new_size >= get_size());
     if (is_small() && new_size <= MAX_SMALL) {
         std::fill(small_data + get_size(), small_data + new_size, assign);
+        set_size(new_size);
     } else {
         if (is_small()) {
             to_big();
         } else {
-            make_unique();
+            ptr = ptr->get_unique();
         }
-        new_buffer(new_size);
-        std::fill(buffer->p + get_size(), buffer->p + new_size, assign);
+        ptr->get().resize(new_size, assign);
     }
-    set_size(new_size);
 }
-bool operator==(const vector &lhs, const vector &rhs) {
+bool operator==(vector const &lhs, vector const &rhs) {
     if (lhs.get_size() != rhs.get_size()) {
         return false;
     }

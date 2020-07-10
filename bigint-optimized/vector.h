@@ -5,16 +5,7 @@
 #ifndef BIGINT__VECTOR_H_
 #define BIGINT__VECTOR_H_
 #include <memory>
-
-namespace {
-    const size_t MAX_SMALL = 8;
-    struct buff {
-        size_t capacity, ref_counter;
-        uint32_t *p;
-        buff(size_t c, size_t r, uint32_t *p)
-        : capacity(c), ref_counter(r), p(p) {}
-    };
-}
+#include <buff.h>
 
 struct vector {
     vector();
@@ -32,6 +23,7 @@ struct vector {
     void resize(size_t new_size, uint32_t assign);
     void swap(vector &rhs);
     friend bool operator==(vector const &, vector const &);
+    static constexpr size_t MAX_SMALL = 8;
 
  private:
     void set_size(size_t new_size);

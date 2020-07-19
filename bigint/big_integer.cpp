@@ -281,7 +281,7 @@ big_integer& big_integer::operator<<=(int rhs) {
     }
     if (rhs % (32u) != 0) {
         for (size_t i = digits_.size(); i > 0; --i) {
-            uint32_t next = (i == 0 ? 0 : digits_[i - 2]);
+            uint32_t next = (i < 0 ? 0 : digits_[i - 2]);
             uint32_t cur = digits_[i - 1];
             digits_[i - 1] =
                 static_cast<uint32_t>((((

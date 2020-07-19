@@ -103,28 +103,29 @@ big_integer& big_integer::operator-=(big_integer const& rhs) {
     return *this;
 }
 
-big_integer& big_integer::operator*=(big_integer rhs) {
+big_integer& big_integer::operator*=(big_integer const& rhs) {
     // TODO still many copies, if rhs >= 0 then we don't need to copy it
     bool result_positive = (rhs.sign_ == sign_);
     if (rhs.sign_ != 0) {
-        rhs.fast_negate();
+        *this *= -rhs;
+        return fast_negate();
     }
     if (sign_ != 0) {
         fast_negate();
     }
     size_t new_sz = digits_.size() + rhs.digits_.size();
     std::vector<uint32_t> new_d(new_sz, 0);
-    uint32_t carry = 0;
     for (size_t i = 0; i < digits_.size(); i++) {
-        for (size_t j = 0; j < rhs.digits_.size() || carry; ++j) {
+        uint32_t carry = 0;
+        for (size_t j = 0; j < rhs.digits_.size(); ++j) {
             uint64_t cur =
-                new_d[i + j] +
-                    static_cast<uint64_t>(digits_[i])
-                        * (j < rhs.digits_.size() ? rhs.digits_[j] : 0)
-                    + carry;
+                new_d[i + j]
+                + static_cast<uint64_t>(digits_[i]) * rhs.digits_[j]
+                + carry;
             new_d[i + j] = static_cast<uint32_t>(cur);
             carry = static_cast<uint32_t>(cur >> 32u);
         }
+        new_d[i + rhs.digits_.size()] = carry;
     }
     digits_.swap(new_d);
     if (!result_positive) {
@@ -147,17 +148,39 @@ big_integer& big_integer::divide_n_1(uint32_t rhs) {
     return *this;
 }
 
-big_integer& big_integer::divide_m_n(big_integer& rhs) {
-    // TODO use fast extra function extend of bit-shifts
+big_integer& big_integer::subtract_power(big_integer const& rhs,
+                                         size_t power) { // result = *this - rhs * 2 ^ {32 * power}
+    size_t max_size = 1 + std::max(digits_.size(), rhs.digits_.size() + power);
+    digits_.resize(max_size, sign_);
+    uint64_t carry = 1u;
+    for (size_t i = 0; i < power; i++) {
+        uint64_t new_carry = ((digits_[i] + carry + UINT32_MAX) >> 32u);
+        digits_[i] = static_cast<uint32_t>(digits_[i] + carry + UINT32_MAX);
+        carry = new_carry;
+    }
+    for (size_t i = power; i < rhs.digits_.size() + power; i++) {
+        uint64_t new_carry = ((digits_[i] + carry + ~rhs.digits_[i - power]) >> 32u);
+        digits_[i] = static_cast<uint32_t>(digits_[i] + carry + ~rhs.digits_[i - power]);
+        carry = new_carry;
+    }
+    for (size_t i = rhs.digits_.size() + power; i < max_size; i++) {
+        uint64_t new_carry = ((digits_[i] + carry + ~rhs.sign_) >> 32u);
+        digits_[i] = static_cast<uint32_t>(digits_[i] + carry + ~rhs.sign_);
+        carry = new_carry;
+    }
+    sign_ = (digits_.back() & (~1u)) ? UINT32_MAX : 0;
+    shrink_to_fit();
+    return *this;
+}
+
+big_integer& big_integer::divide_m_n(big_integer const& rhs) {
     assert(digits_.size() >= 3 && rhs.digits_.size() >= 2);
-    big_integer copy_rhs(rhs);
     size_t n = rhs.digits_.size();
     size_t k = digits_.size() - n;
     std::vector<uint32_t> new_d(k + 1, 0);
-    rhs <<= static_cast<int>(32u * k);
-    if (*this >= rhs) {
+    if (*this >= (rhs << static_cast<int>(32u * k))) {
         new_d[k] = 1;
-        *this -= rhs;
+        subtract_power(rhs, k);
     } else {
         new_d[k] = 0;
     }
@@ -166,17 +189,16 @@ big_integer& big_integer::divide_m_n(big_integer& rhs) {
             break;
         }
         k--;
-        rhs >>= 32u;
         uint32_t u3 = digits_[n + k], u2 = digits_[n + k - 1], u1 = digits_[n + k - 2];
-        uint32_t d2 = rhs.digits_[n + k - 1], d1 = rhs.digits_[n + k - 2];
+        uint32_t d2 = rhs.digits_[n - 1], d1 = rhs.digits_[n - 2];
         if (((static_cast<uint64_t>(u3) << 32u) | u2) == ((static_cast<uint64_t>(d2) << 32u) | d1)) {
             new_d[k] = UINT32_MAX;
         } else {
             new_d[k] = divide_3_2(u3, u2, u1, d2, d1);
         }
-        *this -= rhs * new_d[k];
+        subtract_power(rhs * new_d[k], k);
         while (*this < 0) {
-            *this += copy_rhs;
+            *this += rhs;
             --new_d[k];
         }
     }
@@ -185,7 +207,7 @@ big_integer& big_integer::divide_m_n(big_integer& rhs) {
     return *this;
 }
 
-big_integer& big_integer::divide_unsigned_normalized(big_integer& rhs) {
+big_integer& big_integer::divide_unsigned_normalized(big_integer const& rhs) {
     if (rhs.digits_.size() == 1) {
         return divide_n_1(rhs.digits_[0]);
     }

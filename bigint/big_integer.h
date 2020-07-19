@@ -21,7 +21,7 @@ struct big_integer {
 
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);
-    big_integer& operator*=(big_integer rhs);
+    big_integer& operator*=(big_integer const& rhs);
     big_integer& operator/=(big_integer rhs);
     big_integer& operator%=(big_integer const& rhs);
 
@@ -55,12 +55,13 @@ struct big_integer {
     void shrink_to_fit();
     void bit_operation(big_integer const& rhs, std::function<uint32_t(uint32_t, uint32_t)> const& f);
     big_integer& divide_unsigned(big_integer& rhs);
-    big_integer& divide_unsigned_normalized(big_integer& rhs);
-    big_integer& divide_m_n(big_integer& rhs);
+    big_integer& divide_unsigned_normalized(big_integer const& rhs);
+    big_integer& divide_m_n(big_integer const& rhs);
     big_integer& divide_n_1(uint32_t rhs);
     big_integer& add_one();
     big_integer& bit_not();
     big_integer& fast_negate();
+    big_integer& subtract_power(big_integer const& rhs, size_t power);
 
  private:
     uint32_t sign_;

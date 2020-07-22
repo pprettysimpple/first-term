@@ -21,6 +21,7 @@ struct big_integer {
     big_integer& operator=(big_integer const& other) = default;
     big_integer& operator=(big_integer&& other) noexcept;
 
+    big_integer& operator*=(big_integer&& rhs);
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);
     big_integer& operator*=(big_integer const& rhs);

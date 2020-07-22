@@ -114,8 +114,17 @@ big_integer& big_integer::operator-=(big_integer const& rhs) {
     return *this;
 }
 
+big_integer& big_integer::operator*=(big_integer&& rhs) {
+    bool positive_result = true;
+    if (rhs.sign_ != 0) {
+        positive_result = false;
+        rhs.fast_negate();
+    }
+    *this *= rhs;
+    return positive_result ? *this : fast_negate();
+}
+
 big_integer& big_integer::operator*=(big_integer const& rhs) {
-    // TODO still many copies, if rhs >= 0 then we don't need to copy it
     bool result_positive = (rhs.sign_ == sign_);
     if (rhs.sign_ != 0) {
         *this *= -rhs;

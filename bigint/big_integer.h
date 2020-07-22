@@ -11,6 +11,7 @@
 struct big_integer {
     big_integer();
     big_integer(big_integer const& other) = default;
+    big_integer(big_integer&& other) noexcept;
     big_integer(int a);
     big_integer(uint32_t a);
     big_integer(uint64_t a);
@@ -18,6 +19,7 @@ struct big_integer {
     ~big_integer() = default;
 
     big_integer& operator=(big_integer const& other) = default;
+    big_integer& operator=(big_integer&& other) noexcept;
 
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);

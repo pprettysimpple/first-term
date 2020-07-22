@@ -42,6 +42,17 @@ big_integer::big_integer(uint64_t a) : sign_(0), digits_(2) {
     shrink_to_fit();
 }
 
+big_integer::big_integer(big_integer&& other)  noexcept : sign_(0), digits_() {
+    digits_.swap(other.digits_);
+    std::swap(sign_, other.sign_);
+}
+
+big_integer& big_integer::operator=(big_integer&& other)  noexcept {
+    digits_.swap(other.digits_);
+    std::swap(sign_, other.sign_);
+    return *this;
+}
+
 big_integer::big_integer(std::string const& str) : sign_(0), digits_(1, 0) {
     assert(!str.empty());
     bool result_positive = true;

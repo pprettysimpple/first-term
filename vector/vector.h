@@ -14,7 +14,7 @@ struct vector {
     using iterator = T*;
     using const_iterator = T const*;
 
-    vector();                               // O(1) nothrow
+    vector() = default;                     // O(1) nothrow
     vector(vector const&);                  // O(N) strong
     vector& operator=(vector const& other); // O(N) strong
 
@@ -69,9 +69,9 @@ private:
     static void copy_construct_all(T* dest, T const* source, size_t count);
 
 private:
-    T* data_;
-    size_t size_{};
-    size_t capacity_{};
+    T* data_ = nullptr;
+    size_t size_ = 0;
+    size_t capacity_ = 0;
 };
 
 template<typename T>
@@ -94,10 +94,7 @@ void vector<T>::copy_construct_all(T* dest, T const* source, size_t count) {
 }
 
 template<typename T>
-vector<T>::vector() : data_(nullptr), size_(0), capacity_(0) {}
-
-template<typename T>
-vector<T>::vector(vector<T> const& other) : vector() {
+vector<T>::vector(vector<T> const& other) {
     new_buffer(other.size());
     try {
         copy_construct_all(data_, other.data_, other.size_);

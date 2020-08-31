@@ -43,8 +43,7 @@ void vector::set_big() {
     size_ &= ~1u;
 }
 
-vector::vector(const vector &rhs) {
-    size_ = rhs.size_;
+vector::vector(const vector &rhs) : size_(rhs.size_) {
     if (rhs.is_small()) {
         std::copy(rhs.small_data, rhs.small_data + rhs.get_size(), small_data);
     } else {

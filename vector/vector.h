@@ -6,7 +6,6 @@
 #define VECTOR__VECTOR_H_
 
 #include <cstddef>
-#include <cassert>
 #include <utility>
 #include <stdexcept>
 
@@ -65,9 +64,9 @@ private:
 
     void new_buffer(size_t new_capacity);
 
-    void destroy_pref(T* pos, size_t count);
+    static void destroy_pref(T* pos, size_t count) noexcept;
 
-    void copy_construct_all(T* dest, T const* source, size_t count);
+    static void copy_construct_all(T* dest, T const* source, size_t count);
 
 private:
     T* data_;
@@ -76,7 +75,7 @@ private:
 };
 
 template<typename T>
-void vector<T>::destroy_pref(T* pos, size_t count) {
+void vector<T>::destroy_pref(T* pos, size_t count) noexcept {
     while (count-- > 0) {
         (--pos)->~T();
     }
@@ -98,7 +97,7 @@ template<typename T>
 vector<T>::vector() : data_(nullptr), size_(0), capacity_(0) {}
 
 template<typename T>
-vector<T>::vector(vector<T> const& other) : data_(nullptr), size_(0), capacity_(0) {
+vector<T>::vector(vector<T> const& other) : vector() {
     new_buffer(other.size());
     try {
         copy_construct_all(data_, other.data_, other.size_);
@@ -197,7 +196,7 @@ void vector<T>::reserve(size_t new_capacity) {
 
 template<typename T>
 void vector<T>::shrink_to_fit() {
-    if (size_ != capacity_) {
+    if (size_ < capacity_) {
         new_buffer(size_);
     }
 }
@@ -263,7 +262,6 @@ void vector<T>::push_back_realloc(const T& value) {
 
 template<typename T>
 void vector<T>::pop_back() {
-    assert(size_);
     data_[--size_].~T();
 }
 
@@ -272,13 +270,13 @@ void vector<T>::push_back(const T& value) {
     if (size_ == capacity_) {
         push_back_realloc(value);
     } else {
-        new(data_ + size_++) T(value);
+        new(data_ + size_) T(value);
+        size_++;
     }
 }
 
 template<typename T>
 typename vector<T>::iterator vector<T>::insert(vector<T>::const_iterator it, T const& value) {
-    assert(it >= data_);
     ptrdiff_t insert_pos = it - data_;
     ptrdiff_t current_pos = size_;
     push_back(value);
@@ -291,7 +289,6 @@ typename vector<T>::iterator vector<T>::insert(vector<T>::const_iterator it, T c
 
 template<typename T>
 typename vector<T>::iterator vector<T>::erase(vector<T>::const_iterator it) {
-    assert(it >= data_);
     return vector<T>::erase(it, it + 1);
 }
 

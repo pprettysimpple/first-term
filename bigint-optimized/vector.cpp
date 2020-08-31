@@ -28,7 +28,7 @@ void vector::set_size(size_t new_size) {
 }
 
 size_t vector::get_size() const {
-    return is_small() ? (size_ >> 1u) : ptr->get().size();
+    return is_small() ? (size_ >> 1u) : ptr->data.size();
 }
 
 bool vector::is_small() const {
@@ -49,14 +49,14 @@ vector::vector(const vector &rhs) {
         std::copy(rhs.small_data, rhs.small_data + rhs.get_size(), small_data);
     } else {
         ptr = rhs.ptr;
-        ptr->inc_ref_counter();
+        ptr->ref_counter++;
     }
 }
 
 vector::~vector() {
     if (!is_small()) {
-        ptr->dec_ref_counter();
-        if (ptr->get_ref_counter() == 0) {
+        ptr->ref_counter--;
+        if (ptr->ref_counter == 0) {
             delete ptr;
         }
     }
@@ -80,7 +80,7 @@ uint32_t const &vector::operator[](size_t idx) const {
     if (is_small()) {
         return small_data[idx];
     } else {
-        return ptr->get()[idx];
+        return ptr->data[idx];
     }
 }
 
@@ -89,7 +89,7 @@ uint32_t &vector::operator[](size_t idx) {
         return small_data[idx];
     } else {
         ptr = ptr->get_unique();
-        return ptr->get()[idx];
+        return ptr->data[idx];
     }
 }
 
@@ -117,7 +117,7 @@ void vector::push_back(uint32_t const &val) {
     } else {
         ptr = ptr->get_unique();
     }
-    ptr->get().push_back(val);
+    ptr->data.push_back(val);
 }
 
 void vector::pop_back() {
@@ -125,7 +125,7 @@ void vector::pop_back() {
         set_size(get_size() - 1);
     } else {
         ptr = ptr->get_unique();
-        ptr->get().pop_back();
+        ptr->data.pop_back();
     }
 }
 
@@ -140,7 +140,7 @@ void vector::resize(size_t new_size, uint32_t assign) {
         } else {
             ptr = ptr->get_unique();
         }
-        ptr->get().resize(new_size, assign);
+        ptr->data.resize(new_size, assign);
     }
 }
 

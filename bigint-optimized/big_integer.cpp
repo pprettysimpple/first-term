@@ -134,7 +134,7 @@ big_integer& big_integer::operator*=(big_integer const& rhs) {
         fast_negate();
     }
     size_t new_sz = digits_.size() + rhs.digits_.size();
-    std::vector<uint32_t> new_d(new_sz, 0);
+    vector new_d(new_sz, 0);
     for (size_t i = 0; i < digits_.size(); i++) {
         uint32_t carry = 0;
         for (size_t j = 0; j < rhs.digits_.size(); ++j) {
@@ -197,7 +197,7 @@ big_integer& big_integer::divide_m_n(big_integer const& rhs) {
     assert(digits_.size() >= 3 && rhs.digits_.size() >= 2);
     size_t n = rhs.digits_.size();
     size_t k = digits_.size() - n;
-    std::vector<uint32_t> new_d(k + 1, 0);
+    vector new_d(k + 1, 0);
     if (*this >= (rhs << static_cast<int>(32u * k))) {
         new_d[k] = 1;
         subtract_power(rhs, k);
@@ -514,8 +514,8 @@ std::string to_string(big_integer const& rhs) {
 
 big_integer& big_integer::bit_not() {
     sign_ = ~sign_;
-    for (uint32_t& cur : digits_) {
-        cur = ~cur;
+    for (size_t i = 0; i < digits_.size(); i++) {
+        digits_[i] = ~digits_[i];
     }
     shrink_to_fit();
     return *this;

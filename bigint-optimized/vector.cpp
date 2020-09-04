@@ -8,6 +8,8 @@
 
 vector::vector() : size_(1u) {}
 
+vector::vector(size_t n) { set_size(n); }
+
 vector::vector(size_t n,
                uint32_t assign) {
     set_size(n);

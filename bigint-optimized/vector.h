@@ -9,8 +9,9 @@
 
 struct vector {
     vector();
+    explicit vector(size_t n);
     vector(size_t n, uint32_t assign);
-    vector(vector const &rhs);
+    explicit vector(vector const &rhs);
     vector &operator=(vector const &rhs);
     ~vector();
 

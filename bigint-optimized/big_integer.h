@@ -5,7 +5,7 @@
 #include <gmp.h>
 #include <iosfwd>
 #include <cstdint>
-#include <vector>
+#include <vector.h>
 #include <functional>
 
 struct big_integer {
@@ -68,7 +68,7 @@ struct big_integer {
 
  private:
     uint32_t sign_;
-    std::vector<uint32_t> digits_;
+    vector digits_;
 
 };
 

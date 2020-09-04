@@ -10,7 +10,7 @@
 #include <iomanip>
 
 namespace {
-    big_integer const TEN(10), BASE(1000 * 1000 * 1000);
+    const big_integer TEN(10), BASE(1000 * 1000 * 1000);
 
     uint32_t divide_3_2(uint32_t u3, uint32_t u2, uint32_t u1, uint32_t d2, uint32_t d1) {
         unsigned __int128 up = u3;
@@ -258,7 +258,7 @@ big_integer& big_integer::divide_unsigned(big_integer& rhs) {
 
 big_integer& big_integer::operator/=(big_integer rhs) {
     if (rhs == 0) {
-        throw std::overflow_error("Divide by zero exception");;
+        throw std::overflow_error("Divide by zero exception");
     }
     bool result_positive = (rhs.sign_ == sign_);
     if (rhs.sign_ != 0) {

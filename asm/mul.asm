@@ -82,16 +82,13 @@ mul_long_long:
                 dec             r9                      ; r9--
                 jnz             .loop1
 
+; add carry
+                mov             [r8], r10
+
                 pop             r8
                 pop             rsi
                 pop             r9
 ; body of .loop
-; add carry
-                mov             rax, r10
-                mov             r11, rdi
-                lea             rdi, [r8 + r9 * 8]
-                call            add_long_short
-                mov             rdi, r11
 
                 add             r8, 8                   ; r8++
                 add             rdi, 8                  ; rdi++

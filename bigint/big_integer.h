@@ -4,21 +4,28 @@
 #include <cstddef>
 #include <gmp.h>
 #include <iosfwd>
+#include <cstdint>
+#include <vector>
+#include <functional>
 
-struct big_integer
-{
+struct big_integer {
     big_integer();
-    big_integer(big_integer const& other);
+    big_integer(big_integer const& other) = default;
+    big_integer(big_integer&& other) noexcept;
     big_integer(int a);
+    big_integer(uint32_t a);
+    big_integer(uint64_t a);
     explicit big_integer(std::string const& str);
-    ~big_integer();
+    ~big_integer() = default;
 
-    big_integer& operator=(big_integer const& other);
+    big_integer& operator=(big_integer const& other) = default;
+    big_integer& operator=(big_integer&& other) noexcept;
 
+    big_integer& operator*=(big_integer&& rhs);
     big_integer& operator+=(big_integer const& rhs);
     big_integer& operator-=(big_integer const& rhs);
     big_integer& operator*=(big_integer const& rhs);
-    big_integer& operator/=(big_integer const& rhs);
+    big_integer& operator/=(big_integer rhs);
     big_integer& operator%=(big_integer const& rhs);
 
     big_integer& operator&=(big_integer const& rhs);
@@ -47,8 +54,22 @@ struct big_integer
 
     friend std::string to_string(big_integer const& a);
 
-private:
-    mpz_t mpz;
+ private:
+    void shrink_to_fit();
+    void bit_operation(big_integer const& rhs, std::function<uint32_t(uint32_t, uint32_t)> const& f);
+    big_integer& divide_unsigned(big_integer& rhs);
+    big_integer& divide_unsigned_normalized(big_integer const& rhs);
+    big_integer& divide_m_n(big_integer const& rhs);
+    big_integer& divide_n_1(uint32_t rhs);
+    big_integer& add_one();
+    big_integer& bit_not();
+    big_integer& fast_negate();
+    big_integer& subtract_power(big_integer const& rhs, size_t power);
+
+ private:
+    uint32_t sign_;
+    std::vector<uint32_t> digits_;
+
 };
 
 big_integer operator+(big_integer a, big_integer const& b);
